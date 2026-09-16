@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Radius Gauge Finder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --steel-900:#14181c;
+    --steel-800:#1d2329;
+    --steel-700:#272f37;
+    --steel-600:#3a4550;
+    --blue-500:#4a7fb5;
+    --blue-400:#6b9cd0;
+    --yellow-500:#e0b13c;
+    --green-500:#5fa878;
+    --red-500:#c0564f;
+    --text-hi:#eceff1;
+    --text-lo:#9aa5ad;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--steel-900);
+    color:var(--text-hi);
+    font-family:'IBM Plex Sans',sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{
+    max-width:480px;
+    margin:0 auto;
+    padding:20px 16px 40px;
+  }
+  header{
+    padding:4px 0 18px;
+    border-bottom:1px solid var(--steel-700);
+    margin-bottom:20px;
+  }
+  header .kicker{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    color:var(--blue-400);
+    letter-spacing:0.02em;
+    margin:0 0 4px;
+  }
+  header h1{
+    font-size:22px;
+    font-weight:600;
+    margin:0 0 6px;
+    line-height:1.25;
+  }
+  header p{
+    font-size:13.5px;
+    color:var(--text-lo);
+    margin:0;
+    line-height:1.5;
+  }
+
+  .set-tag{
+    display:inline-block;
+    margin-top:10px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11.5px;
+    color:var(--text-lo);
+    border:1px solid var(--steel-600);
+    border-radius:3px;
+    padding:4px 8px;
+  }
+
+  .input-card{
+    background:var(--steel-800);
+    border:1px solid var(--steel-700);
+    border-radius:6px;
+    padding:16px;
+    margin-bottom:16px;
+  }
+  .input-row{
+    display:flex;
+    gap:8px;
+  }
+  .field{
+    flex:1;
+  }
+  label{
+    display:block;
+    font-size:12px;
+    color:var(--text-lo);
+    margin-bottom:6px;
+  }
+  select, input[type=text]{
+    width:100%;
+    background:var(--steel-900);
+    border:1px solid var(--steel-600);
+    color:var(--text-hi);
+    font-family:'IBM Plex Mono',monospace;
+    font-size:17px;
+    padding:11px 10px;
+    border-radius:4px;
+    outline:none;
+  }
+  select{
+    font-family:'IBM Plex Sans',sans-serif;
+    font-size:14px;
+  }
+  input[type=text]:focus, select:focus{
+    border-color:var(--blue-500);
+  }
+  .unit-select{
+    max-width:88px;
+    flex:none;
+  }
+  .hint{
+    font-size:11.5px;
+    color:var(--text-lo);
+    margin-top:8px;
+  }
+
+  .result{
+    display:none;
+  }
+  .result.show{
+    display:block;
+  }
+
+  .readout{
+    background:var(--steel-800);
+    border:1px solid var(--steel-700);
+    border-radius:6px;
+    padding:18px 16px;
+    margin-bottom:14px;
+    text-align:center;
+  }
+  .readout .label{
+    font-size:11.5px;
+    color:var(--text-lo);
+    margin-bottom:8px;
+  }
+  .readout .value{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:34px;
+    font-weight:600;
+    color:var(--blue-400);
+    line-height:1.1;
+  }
+  .readout .sub{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:13px;
+    color:var(--text-lo);
+    margin-top:6px;
+  }
+  .readout.exact .value{ color:var(--green-500); }
+  .readout .badge{
+    display:inline-block;
+    margin-top:10px;
+    font-size:11.5px;
+    font-family:'IBM Plex Mono',monospace;
+    padding:3px 9px;
+    border-radius:20px;
+    background:rgba(95,168,120,0.15);
+    color:var(--green-500);
+    border:1px solid rgba(95,168,120,0.4);
+  }
+  .readout .badge.off{
+    background:rgba(224,177,60,0.12);
+    color:var(--yellow-500);
+    border:1px solid rgba(224,177,60,0.4);
+  }
+
+  .bracket{
+    display:flex;
+    gap:10px;
+    margin-bottom:16px;
+  }
+  .blade{
+    flex:1;
+    background:var(--steel-800);
+    border:1px solid var(--steel-700);
+    border-radius:6px;
+    padding:14px 10px;
+    text-align:center;
+    position:relative;
+  }
+  .blade .tag{
+    font-size:10.5px;
+    letter-spacing:0.03em;
+    color:var(--text-lo);
+    margin-bottom:8px;
+  }
+  .blade .frac{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:20px;
+    font-weight:600;
+  }
+  .blade .dec{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    color:var(--text-lo);
+    margin-top:4px;
+  }
+  .blade.under .frac{ color:var(--blue-400); }
+  .blade.over .frac{ color:var(--yellow-500); }
+  .blade .diff{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    color:var(--text-lo);
+    margin-top:6px;
+  }
+
+  .howto{
+    background:var(--steel-800);
+    border:1px solid var(--steel-700);
+    border-radius:6px;
+    padding:14px 16px;
+  }
+  .howto .label{
+    font-size:11.5px;
+    color:var(--text-lo);
+    margin-bottom:10px;
+  }
+  .howto ol{
+    margin:0;
+    padding-left:18px;
+  }
+  .howto li{
+    font-size:13px;
+    line-height:1.55;
+    color:var(--text-hi);
+    margin-bottom:6px;
+  }
+  .howto li:last-child{ margin-bottom:0; }
+  .howto b{ color:var(--blue-400); font-weight:600; }
+
+  .full-set{
+    margin-top:20px;
+  }
+  .full-set summary{
+    font-size:12.5px;
+    color:var(--text-lo);
+    cursor:pointer;
+    padding:8px 0;
+  }
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:6px;
+    margin-top:8px;
+  }
+  .grid div{
+    background:var(--steel-800);
+    border:1px solid var(--steel-700);
+    border-radius:4px;
+    padding:7px 4px;
+    text-align:center;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11.5px;
+    color:var(--text-lo);
+  }
+  .grid div.hi{
+    border-color:var(--blue-500);
+    color:var(--blue-400);
+  }
+</style>
+
+  <meta name="theme-color" content="#14181c">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Radius Gauge">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon-180.png">
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="kicker">SHOP TOOL</p>
+    <h1>Radius Gauge Finder</h1>
+    <p>Enter the radius you're checking. Get the closest gauge across both sets, plus the go/no-go bracket pair.</p>
+    <div class="set-tag">Set A: 25-pc · 1/64–17/64" x64ths, 9/32–1/2" x32nds</div>
+    <div class="set-tag" style="margin-left:6px;">Set B: 8-pc · 9/16–1" x16ths</div>
+  </header>
+
+  <div class="input-card">
+    <div class="input-row">
+      <div class="field">
+        <label for="nominal">Nominal radius</label>
+        <input type="text" id="nominal" inputmode="decimal" placeholder="e.g. 0.187, 3/16, .25">
+      </div>
+      <div class="field unit-select">
+        <label for="unit">Unit</label>
+        <select id="unit">
+          <option value="in">in</option>
+          <option value="mm">mm</option>
+        </select>
+      </div>
+    </div>
+    <div class="hint">Accepts decimals (0.187), fractions (3/16), or leading-dot (.25). mm entries convert to inches automatically.</div>
+  </div>
+
+  <div id="result" class="result">
+
+    <div class="readout" id="readoutCard">
+      <div class="label">CLOSEST GAUGE IN YOUR SET</div>
+      <div class="value" id="closestFrac">—</div>
+      <div class="sub" id="closestDec">—</div>
+      <span class="badge" id="matchBadge">—</span>
+    </div>
+
+    <div class="bracket">
+      <div class="blade under">
+        <div class="tag">UNDER (fits inside)</div>
+        <div class="frac" id="underFrac">—</div>
+        <div class="dec" id="underDec">—</div>
+        <div class="diff" id="underDiff">—</div>
+      </div>
+      <div class="blade over">
+        <div class="tag">OVER (shows gap)</div>
+        <div class="frac" id="overFrac">—</div>
+        <div class="dec" id="overDec">—</div>
+        <div class="diff" id="overDiff">—</div>
+      </div>
+    </div>
+
+    <div class="howto">
+      <div class="label">HOW TO CHECK IT</div>
+      <ol>
+        <li>Hold the <b>UNDER</b> blade against the part's radius. It should sit flush with no light gap — if it rocks or gaps, the part radius is larger than that blade.</li>
+        <li>Hold the <b>OVER</b> blade against the same spot. You should see a slight light gap at the edges — if it sits perfectly flush too, the part radius may actually match the over blade.</li>
+        <li>If UNDER is flush and OVER shows a gap, the part radius falls between the two — call it a pass against the nominal.</li>
+        <li>If neither blade sits flush, the part radius is outside this bracket — flag it and remeasure.</li>
+      </ol>
+    </div>
+
+  </div>
+
+  <details class="full-set">
+    <summary>View full 25-piece set</summary>
+    <div class="grid" id="fullGrid"></div>
+  </details>
+
+</div>
+
+<script>
+  // Set A: 25-piece set, 1/64 to 17/64 (x64ths), 9/32 to 1/2 (x32nds)
+  // Set B: 8-piece set, 9/16 to 1" (x16ths)
+  const gauges = [];
+  for (let n = 1; n <= 17; n++) {
+    gauges.push({ num: n, den: 64, dec: n / 64, set: 'A' });
+  }
+  for (let n = 9; n <= 16; n++) {
+    gauges.push({ num: n, den: 32, dec: n / 32, set: 'A' });
+  }
+  for (let n = 9; n <= 16; n++) {
+    gauges.push({ num: n, den: 16, dec: n / 16, set: 'B' });
+  }
+  gauges.sort((a, b) => a.dec - b.dec);
+
+  const setNames = { A: '25-pc set', B: '8-pc set' };
+
+  function gcd(a, b) { return b === 0 ? a : gcd(b, a % b); }
+
+  function fracLabel(g) {
+    // Reduce for display (16/32 -> 1/2 etc.)
+    const d = gcd(g.num, g.den);
+    const num = g.num / d, den = g.den / d;
+    return num + '/' + den + '"';
+  }
+
+  function buildGrid() {
+    const grid = document.getElementById('fullGrid');
+    grid.innerHTML = '';
+    gauges.forEach((g, i) => {
+      const div = document.createElement('div');
+      div.innerHTML = fracLabel(g) + '<br><span style="opacity:.6;font-size:10px;">' + g.set + '</span>';
+      div.dataset.idx = i;
+      grid.appendChild(div);
+    });
+  }
+  buildGrid();
+
+  function parseInput(raw, unit) {
+    raw = raw.trim();
+    if (!raw) return null;
+    let val;
+    if (raw.includes('/')) {
+      const parts = raw.split('/');
+      if (parts.length !== 2) return null;
+      const n = parseFloat(parts[0]);
+      const d = parseFloat(parts[1]);
+      if (!d) return null;
+      val = n / d;
+    } else {
+      val = parseFloat(raw);
+    }
+    if (isNaN(val) || val <= 0) return null;
+    if (unit === 'mm') val = val / 25.4;
+    return val;
+  }
+
+  function findMatch(target) {
+    let closestIdx = 0;
+    let closestDiff = Infinity;
+    gauges.forEach((g, i) => {
+      const diff = Math.abs(g.dec - target);
+      if (diff < closestDiff) { closestDiff = diff; closestIdx = i; }
+    });
+
+    let underIdx = null, overIdx = null;
+    for (let i = 0; i < gauges.length; i++) {
+      if (gauges[i].dec <= target) underIdx = i;
+    }
+    for (let i = gauges.length - 1; i >= 0; i--) {
+      if (gauges[i].dec >= target) overIdx = i;
+    }
+    return { closestIdx, closestDiff, underIdx, overIdx };
+  }
+
+  function render(target) {
+    const { closestIdx, closestDiff, underIdx, overIdx } = findMatch(target);
+    const closest = gauges[closestIdx];
+    const isExact = closestDiff < 0.0008; // within ~1/1000" of exact fraction
+
+    document.getElementById('closestFrac').textContent = fracLabel(closest);
+    document.getElementById('closestDec').textContent = '= ' + closest.dec.toFixed(4) + '" · target ' + target.toFixed(4) + '" · ' + setNames[closest.set];
+
+    const readoutCard = document.getElementById('readoutCard');
+    const badge = document.getElementById('matchBadge');
+    if (isExact) {
+      readoutCard.classList.add('exact');
+      badge.textContent = 'EXACT MATCH IN SET';
+      badge.classList.remove('off');
+    } else {
+      readoutCard.classList.remove('exact');
+      badge.textContent = 'OFF BY ' + closestDiff.toFixed(4) + '"';
+      badge.classList.add('off');
+    }
+
+    // Bracket
+    const underEl = { frac: document.getElementById('underFrac'), dec: document.getElementById('underDec'), diff: document.getElementById('underDiff') };
+    const overEl = { frac: document.getElementById('overFrac'), dec: document.getElementById('overDec'), diff: document.getElementById('overDiff') };
+
+    if (underIdx !== null) {
+      const u = gauges[underIdx];
+      underEl.frac.textContent = fracLabel(u);
+      underEl.dec.textContent = u.dec.toFixed(4) + '" · ' + setNames[u.set];
+      underEl.diff.textContent = '−' + (target - u.dec).toFixed(4) + '" from target';
+    } else {
+      underEl.frac.textContent = 'none';
+      underEl.dec.textContent = 'below set range';
+      underEl.diff.textContent = '';
+    }
+
+    if (overIdx !== null) {
+      const o = gauges[overIdx];
+      overEl.frac.textContent = fracLabel(o);
+      overEl.dec.textContent = o.dec.toFixed(4) + '" · ' + setNames[o.set];
+      overEl.diff.textContent = '+' + (o.dec - target).toFixed(4) + '" from target';
+    } else {
+      overEl.frac.textContent = 'none';
+      overEl.dec.textContent = 'above set range';
+      overEl.diff.textContent = '';
+    }
+
+    // Highlight in full grid
+    document.querySelectorAll('#fullGrid div').forEach(d => d.classList.remove('hi'));
+    const hiEl = document.querySelector('#fullGrid div[data-idx="' + closestIdx + '"]');
+    if (hiEl) hiEl.classList.add('hi');
+
+    document.getElementById('result').classList.add('show');
+  }
+
+  const nominalInput = document.getElementById('nominal');
+  const unitSelect = document.getElementById('unit');
+
+  function update() {
+    const target = parseInput(nominalInput.value, unitSelect.value);
+    if (target === null) {
+      document.getElementById('result').classList.remove('show');
+      return;
+    }
+    render(target);
+  }
+
+  nominalInput.addEventListener('input', update);
+  unitSelect.addEventListener('change', update);
+</script>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').catch(() => {});
+    });
+  }
+</script>
+</body>
+</html>
