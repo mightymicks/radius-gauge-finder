@@ -9,13 +9,13 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "icon-180.png",
+      "src": "icon-180.PNG",
       "sizes": "180x180",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "icon-512.png",
+      "src": "icon-512.PNG",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
